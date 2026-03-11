@@ -47,6 +47,7 @@ export const Banana = ({
     if (!bananaRef.current || !basketRef.current) return;
 
     if (!hasRealDrag.current) {
+      controls.start({ x: 0, y: 0, scale: 1, opacity: 1, transition: { duration: 0.2 } });
       dragStartedAt.current = null;
       return;
     }
@@ -95,6 +96,8 @@ export const Banana = ({
       }).then(() => {
         setIsDropped(true);
       });
+    } else {
+      controls.start({ x: 0, y: 0, scale: 1, opacity: 1, transition: { duration: 0.2 } });
     }
 
     dragStartedAt.current = null;
@@ -108,6 +111,7 @@ export const Banana = ({
       ref={bananaRef}
       drag
       dragConstraints={containerRef}
+      dragSnapToOrigin
       dragElastic={0.2}
       whileHover={{ scale: 1.2, cursor: "grab" }}
       whileDrag={{ scale: 1.1, cursor: "grabbing" }}
