@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useGameStore } from "../store/useGameStore";
+import { useEffect } from "react";
 
 export const SuccessModal = () => {
   const { isSuccess, resetGame } = useGameStore();
