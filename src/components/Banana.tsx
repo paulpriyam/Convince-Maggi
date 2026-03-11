@@ -10,6 +10,7 @@ interface BananaProps {
   className?: string;
   initialX?: number;
   initialY?: number;
+  emoji?: string;
 }
 
 export const Banana = ({
@@ -20,6 +21,7 @@ export const Banana = ({
   className,
   initialX = 0,
   initialY = 0,
+  emoji = "🍌",
 }: BananaProps) => {
   const controls = useAnimation();
   const bananaRef = useRef<HTMLDivElement>(null);
@@ -47,7 +49,6 @@ export const Banana = ({
     if (!bananaRef.current || !basketRef.current) return;
 
     if (!hasRealDrag.current) {
-      controls.start({ x: 0, y: 0, scale: 1, opacity: 1, transition: { duration: 0.2 } });
       dragStartedAt.current = null;
       return;
     }
@@ -73,16 +74,15 @@ export const Banana = ({
 
     if (isOverBasket) {
       onDrop();
-      // Animate into the basket and disappear
-      controls.start({
-        scale: 0,
-        opacity: 0,
-        transition: { duration: 0.3 },
-      }).then(() => {
-        setIsDropped(true);
-      });
-    } else {
-      controls.start({ x: 0, y: 0, scale: 1, opacity: 1, transition: { duration: 0.2 } });
+      controls
+        .start({
+          scale: 0,
+          opacity: 0,
+          transition: { duration: 0.3 },
+        })
+        .then(() => {
+          setIsDropped(true);
+        });
     }
 
     dragStartedAt.current = null;
@@ -96,8 +96,7 @@ export const Banana = ({
       ref={bananaRef}
       drag
       dragConstraints={containerRef}
-      dragSnapToOrigin
-      dragElastic={0.2}
+      dragElastic={0.15}
       whileHover={{ scale: 1.2, cursor: "grab" }}
       whileDrag={{ scale: 1.1, cursor: "grabbing" }}
       initial={{ opacity: 0, scale: 0 }}
@@ -108,7 +107,7 @@ export const Banana = ({
       style={{ left: initialX, top: initialY }}
       className={cn("absolute text-4xl select-none z-10 touch-none cursor-grab active:cursor-grabbing", className)}
     >
-      🍌
+      {emoji}
     </motion.div>
   );
 };
