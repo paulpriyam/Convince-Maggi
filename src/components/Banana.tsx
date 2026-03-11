@@ -13,7 +13,7 @@ interface BananaProps {
 }
 
 export const Banana = ({
-  id,
+  id: _id,
   basketRef,
   containerRef,
   onDrop,
@@ -23,27 +23,67 @@ export const Banana = ({
 }: BananaProps) => {
   const controls = useAnimation();
   const bananaRef = useRef<HTMLDivElement>(null);
+  const dragStartedAt = useRef<{ x: number; y: number } | null>(null);
+  const hasRealDrag = useRef(false);
   const [isDropped, setIsDropped] = useState(false);
 
   useEffect(() => {
     controls.start({ opacity: 1, scale: 1, transition: { delay: Math.random() * 0.5 } });
   }, [controls]);
 
+  const handleDragStart = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    dragStartedAt.current = { x: info.point.x, y: info.point.y };
+    hasRealDrag.current = false;
+  };
+
+  const handleDrag = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (!dragStartedAt.current || hasRealDrag.current) return;
+    const dx = info.point.x - dragStartedAt.current.x;
+    const dy = info.point.y - dragStartedAt.current.y;
+    hasRealDrag.current = Math.hypot(dx, dy) > 12;
+  };
+
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (!bananaRef.current || !basketRef.current) return;
 
-    const dragDistance = Math.hypot(info.offset.x, info.offset.y);
-    if (dragDistance < 8) {
+    if (!hasRealDrag.current) {
+      dragStartedAt.current = null;
       return;
     }
 
+    const bananaRect = bananaRef.current.getBoundingClientRect();
     const basketRect = basketRef.current.getBoundingClientRect();
 
-    const isOverBasket =
+    const overlapX = Math.max(
+      0,
+      Math.min(bananaRect.right, basketRect.right) - Math.max(bananaRect.left, basketRect.left)
+    );
+    const overlapY = Math.max(
+      0,
+      Math.min(bananaRect.bottom, basketRect.bottom) - Math.max(bananaRect.top, basketRect.top)
+    );
+    const overlapArea = overlapX * overlapY;
+    const bananaArea = bananaRect.width * bananaRect.height;
+    const overlapRatio = bananaArea > 0 ? overlapArea / bananaArea : 0;
+
+    const pointerInsideBasket =
       info.point.x >= basketRect.left &&
       info.point.x <= basketRect.right &&
       info.point.y >= basketRect.top &&
       info.point.y <= basketRect.bottom;
+
+    const basketCenterX = basketRect.left + basketRect.width / 2;
+    const basketCenterY = basketRect.top + basketRect.height / 2;
+    const pointerDistanceToCenter = Math.hypot(
+      info.point.x - basketCenterX,
+      info.point.y - basketCenterY
+    );
+    const centerThreshold = Math.max(36, Math.min(basketRect.width, basketRect.height) * 0.7);
+
+    const isOverBasket =
+      pointerInsideBasket &&
+      overlapRatio >= 0.2 &&
+      pointerDistanceToCenter <= centerThreshold;
 
     if (isOverBasket) {
       onDrop();
@@ -56,6 +96,9 @@ export const Banana = ({
         setIsDropped(true);
       });
     }
+
+    dragStartedAt.current = null;
+    hasRealDrag.current = false;
   };
 
   if (isDropped) return null;
@@ -70,6 +113,8 @@ export const Banana = ({
       whileDrag={{ scale: 1.1, cursor: "grabbing" }}
       initial={{ opacity: 0, scale: 0 }}
       animate={controls}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       style={{ left: initialX, top: initialY }}
       className={cn("absolute text-4xl select-none z-10 touch-none cursor-grab active:cursor-grabbing", className)}
