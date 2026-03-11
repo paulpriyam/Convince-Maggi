@@ -47,6 +47,7 @@ export const Banana = ({
     if (!bananaRef.current || !basketRef.current) return;
 
     if (!hasRealDrag.current) {
+      controls.start({ x: 0, y: 0, scale: 1, opacity: 1, transition: { duration: 0.2 } });
       dragStartedAt.current = null;
       return;
     }
@@ -54,36 +55,21 @@ export const Banana = ({
     const bananaRect = bananaRef.current.getBoundingClientRect();
     const basketRect = basketRef.current.getBoundingClientRect();
 
-    const overlapX = Math.max(
-      0,
-      Math.min(bananaRect.right, basketRect.right) - Math.max(bananaRect.left, basketRect.left)
-    );
-    const overlapY = Math.max(
-      0,
-      Math.min(bananaRect.bottom, basketRect.bottom) - Math.max(bananaRect.top, basketRect.top)
-    );
-    const overlapArea = overlapX * overlapY;
-    const bananaArea = bananaRect.width * bananaRect.height;
-    const overlapRatio = bananaArea > 0 ? overlapArea / bananaArea : 0;
-
     const pointerInsideBasket =
       info.point.x >= basketRect.left &&
       info.point.x <= basketRect.right &&
       info.point.y >= basketRect.top &&
       info.point.y <= basketRect.bottom;
 
-    const basketCenterX = basketRect.left + basketRect.width / 2;
-    const basketCenterY = basketRect.top + basketRect.height / 2;
-    const pointerDistanceToCenter = Math.hypot(
-      info.point.x - basketCenterX,
-      info.point.y - basketCenterY
-    );
-    const centerThreshold = Math.max(36, Math.min(basketRect.width, basketRect.height) * 0.7);
+    const bananaCenterX = bananaRect.left + bananaRect.width / 2;
+    const bananaCenterY = bananaRect.top + bananaRect.height / 2;
+    const bananaCenterInsideBasket =
+      bananaCenterX >= basketRect.left &&
+      bananaCenterX <= basketRect.right &&
+      bananaCenterY >= basketRect.top &&
+      bananaCenterY <= basketRect.bottom;
 
-    const isOverBasket =
-      pointerInsideBasket &&
-      overlapRatio >= 0.2 &&
-      pointerDistanceToCenter <= centerThreshold;
+    const isOverBasket = pointerInsideBasket && bananaCenterInsideBasket;
 
     if (isOverBasket) {
       onDrop();
@@ -95,6 +81,8 @@ export const Banana = ({
       }).then(() => {
         setIsDropped(true);
       });
+    } else {
+      controls.start({ x: 0, y: 0, scale: 1, opacity: 1, transition: { duration: 0.2 } });
     }
 
     dragStartedAt.current = null;
