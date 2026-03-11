@@ -13,7 +13,7 @@ function App() {
   const { addHappiness, gameId } = useGameStore();
 
   // Generate bananas with random positions
-  const bananas = useMemo(() => Array.from({ length: 12 }).map((_, i) => ({
+  const bananas = useMemo(() => Array.from({ length: 18 }).map((_, i) => ({
     id: `banana-${i}`,
     initialX: Math.random() * (window.innerWidth - 100) + 50,
     initialY: Math.random() * (window.innerHeight - 400) + 50, // Avoid bottom area
